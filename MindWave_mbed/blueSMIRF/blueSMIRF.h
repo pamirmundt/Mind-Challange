@@ -385,6 +385,8 @@ public:
      */
     void printf(char * msg);
     
+    void putc(int test);
+    
     /** Read Response
      *  @param char array to data to return
      */

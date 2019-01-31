@@ -444,7 +444,7 @@ int blueSMIRF::readByteTimeout(void){
     Timer timeOut;
     timeOut.start();
     while(!serial.readable()){
-         if(timeOut.read_ms() > 1)
+         if(timeOut.read_ms() > 2)
             return -1;
     }
     
@@ -453,6 +453,10 @@ int blueSMIRF::readByteTimeout(void){
 
 void blueSMIRF::printf(char * msg){
     serial.printf("%s",msg);   
+}
+
+void blueSMIRF::putc(int test){
+    serial.putc(test);
 }
 
 void blueSMIRF::readResponse(char* response){

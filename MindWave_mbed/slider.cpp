@@ -33,10 +33,10 @@ extern int game_Mode;
 extern bool escape;
 
 //Left Filter
-volatile float alphaLeft = 0.75f;     //Forgetting Factor
+volatile float alphaLeft = 0.2f;     //Forgetting Factor
 volatile float filteredLeft = 0.0f;  //Filtered Output
 //Right Filter
-volatile float alphaRight = 0.75f;    //Forgetting Factor
+volatile float alphaRight = 0.2f;    //Forgetting Factor
 volatile float filteredRight = 0.0f; //Filtered Output
 
 volatile bool allignCenterCMD = false;

@@ -6,6 +6,13 @@
 #include "slider.h"
 #include "NeuroskyMobileRead.h"
 
+extern uint16_t ADDR_CONNECT_TO;
+extern uint16_t ADDR_DISCONNECT;
+extern uint16_t ADDR_CONNECT_AUTO;
+
+extern uint16_t ADDR_HEADSET_1;
+extern uint16_t ADDR_HEADSET_2;
+
 extern int NS1_value;
 extern int NS2_value;
 
@@ -51,12 +58,22 @@ int main() {
     sliderInit();
     
     pc.baud(9600);
-    NeuroskyMobile_1.setBaud(57600);
-    NeuroskyMobile_2.setBaud(57600);
+    NeuroskyMobile_1.setBaud(115200);
+    NeuroskyMobile_2.setBaud(115200);
+    
+    // Connect to Headset 1
+    // TX: PC_10 / RX: PC_11
+    NeuroskyMobile_1.putc(ADDR_CONNECT_TO);         //Connect to
+    NeuroskyMobile_1.putc(ADDR_HEADSET_1 >> 8);        //Address Upper Byte
+    NeuroskyMobile_1.putc(ADDR_HEADSET_1 | 0xFF00);    //Address Lower Byte
+    
+    // Connect to Headset 2
+    // TX: PA_0 / RX: PA_1
+    NeuroskyMobile_2.putc(ADDR_CONNECT_TO);         //Connect to
+    NeuroskyMobile_2.putc(ADDR_HEADSET_2 >> 8);        //Address Upper Byte
+    NeuroskyMobile_2.putc(ADDR_HEADSET_2 | 0xFF00);    //Address Lower Byte
     
     //dummy.attach(&printDummy, 0.5);
-    
-    //initMind();
     
     while(1) {
         readNeuroskyMobile_1();
@@ -66,48 +83,6 @@ int main() {
             playGame(game_Mode);
         //pc.printf("C:%d R:%d L:%d CO:%d CC:%d CR:%d CL:%d CO:%d G:%d GS:%d R:%d L:%d\r\n", isAllignedCenter, isAllignedRight, isAllignedLeft, allignRightOffsetCMD, allignCenterCMD, allignRightCMD, allignLeftCMD,isAllignedRightOffset, game_Mode, gameStarted, rightLimitPushed,leftLimitPushed);
     }
-}
-
-void initMind(){
-    NeuroskyMobile_1.flushSerial();
-    
-    if(NeuroskyMobile_1.exitCMD())
-        pc.printf("0) Exited Command Mode\r\n");
-        
-    if(NeuroskyMobile_1.enterCMD())
-        pc.printf("1) Entered Command Mode\r\n");
-    
-    if(NeuroskyMobile_1.setUART("57"))
-        pc.printf("2) UART Baud Changed\r\n");
-        
-    if(NeuroskyMobile_1.setConfTimer(255))
-        pc.printf("3) Continous configuration, local and remote\r\n");
-    
-    if(NeuroskyMobile_1.setName("mindwave_1"))
-        pc.printf("4) Name Set\r\n");
-        
-    if(NeuroskyMobile_1.setMode(6));
-        pc.printf("5) Mode Set\r\n");
-        
-    if(NeuroskyMobile_1.setPinCode("0000"))
-        pc.printf("6) Pin Set\r\n");
-        
-    if(NeuroskyMobile_1.setSpecialConf(16))
-        pc.printf("7) Special Configuration\r\n");
-        
-    if(NeuroskyMobile_1.setAuthentication(0))
-        pc.printf("8) Authentication Disabled\r\n");
-        
-    if(NeuroskyMobile_1.setRemoteAddress("74E5439C6003"))
-        pc.printf("9) Address Set\r\n");
-
-    //NeuroskyMobile_1.printf("+\n");
-    //while(1){
-    //    pc.printf("%c",NeuroskyMobile_1.readByteBlocking());
-    //}
-        
-    if(NeuroskyMobile_1.reboot())
-        pc.printf("Reboot\r\n");
 }
 
 void readPC(void){

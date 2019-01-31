@@ -1,6 +1,14 @@
 #include "NeuroskyMobileRead.h"
 #include "slider.h"
 
+uint16_t ADDR_CONNECT_TO    = 0xC0;
+uint16_t ADDR_DISCONNECT    = 0xC1;
+uint16_t ADDR_CONNECT_AUTO  = 0xC2;
+
+uint16_t ADDR_HEADSET_1     = 0xE027;
+uint16_t ADDR_HEADSET_2     = 0x2E28;
+
+
 blueSMIRF NeuroskyMobile_1(PC_10, PC_11);   //Serial3
 blueSMIRF NeuroskyMobile_2(PA_0, PA_1);   //Serial4
 
@@ -14,8 +22,25 @@ int NS2_value = 0;
 Timer NS1_disconnect_timer;
 Timer NS2_disconnect_timer;
 
-int disconnectDuration = 5000;
+int disconnectDuration = 10000;
 
+void reconnectNeuroskyMobile_1(void){
+    // Try to connect again
+    // Exit the dongle from connection state
+    NeuroskyMobile_1.putc(ADDR_DISCONNECT);
+    NeuroskyMobile_1.putc(ADDR_CONNECT_TO);         //Connect to
+    NeuroskyMobile_1.putc(ADDR_HEADSET_1 >> 8);        //Address Upper Byte
+    NeuroskyMobile_1.putc(ADDR_HEADSET_1 | 0xFF00);    //Address Lower Byte
+}
+
+void reconnectNeuroskyMobile_2(void){
+    // Try to connect again
+    // Exit the dongle from connection state
+    NeuroskyMobile_2.putc(ADDR_DISCONNECT);
+    NeuroskyMobile_2.putc(ADDR_CONNECT_TO);         //Connect to
+    NeuroskyMobile_2.putc(ADDR_HEADSET_2 >> 8);        //Address Upper Byte
+    NeuroskyMobile_2.putc(ADDR_HEADSET_2 | 0xFF00);    //Address Lower Byte
+}
 
 void readNeuroskyMobile_1(){
     if(NS1_disconnect_timer.read_ms() > disconnectDuration){
@@ -23,8 +48,9 @@ void readNeuroskyMobile_1(){
         pc.printf("Disconnected1\r\n");
         NS1_disconnect_timer.reset();
         NS1_disconnect_timer.stop();
+        
+        reconnectNeuroskyMobile_1();
     }
-    
     // Look for sync bytes
     // 0xAA 0xAA
     if(NeuroskyMobile_1.readByteTimeout() == 170){
@@ -55,16 +81,22 @@ void readNeuroskyMobile_1(){
             generatedChecksum = 255 - generatedChecksum;
 
             if(checksum == generatedChecksum){  
-                int NeuroskyMobile_1_poorQuality = 200;
+                //int NeuroskyMobile_1_poorQuality = 200;
                 int NeuroskyMobile_1_attention = 0;
-                int NeuroskyMobile_1_meditation = 0;
+                //int NeuroskyMobile_1_meditation = 0;
 
                 for(int i = 0; i < payloadLength; i++) {
                     //Parse the payload
                     switch (payloadData[i]) {
+                        case 0xD0:{
+                            //uint16_t addUpp = payloadData[i+2];
+                            //uint16_t addLow = payloadData[i+3];
+                            //pc.printf("Connected to: %#04x\r\n", ((addUpp<<8)|addLow));
+                            break;
+                        }
                         case 2:{
                             i++;            
-                            NeuroskyMobile_1_poorQuality = payloadData[i];
+                            //NeuroskyMobile_1_poorQuality = payloadData[i];
                             NeuroskyMobile_1_bigPacket = true;           
                             break;
                         }
@@ -77,16 +109,48 @@ void readNeuroskyMobile_1(){
           
                         case 5:{
                             i++;
-                            NeuroskyMobile_1_meditation = payloadData[i];
+                            //NeuroskyMobile_1_meditation = payloadData[i];
                             break;
                         }
                         
-                        case 0x80:{
+                        case 0xD1:{
+                            //pc.printf("Headset not found!\r\n");
+                            
+                            reconnectNeuroskyMobile_1();
+                            break;
+                        }
+                            
+                        case 0xD2:{
+                            //pc.printf("Headset disconnected!\r\n");
+                            
+                            reconnectNeuroskyMobile_1();
+                            break;
+                        }
+                        
+                        case 0xD3:{
+                            //pc.printf("Request denied\r\n");
+                            
+                            reconnectNeuroskyMobile_1();
+                            break;
+                        }
+                            
+                        case 0xD4:{
+                            //pc.printf("Standby/Scan Mode\r\n");
+                            
+                            reconnectNeuroskyMobile_1();
+                            break;
+                        }
+                        
+                        case -70:{
+                            break;
+                        }
+                            
+                        case 0x80:{ // Skip RAW
                             i = i + 3;
                             break;
                         }
                         
-                        case 0x83:{
+                        case 0x83:{ //Skip ASIC_EEG_POWER
                             i = i + 25;   
                             break;
                         }
@@ -121,6 +185,7 @@ void readNeuroskyMobile_2(){
         pc.printf("Disconnected2\r\n");
         NS2_disconnect_timer.reset();
         NS2_disconnect_timer.stop();
+        reconnectNeuroskyMobile_2();
     }
     
     // Look for sync bytes
@@ -152,16 +217,22 @@ void readNeuroskyMobile_2(){
             generatedChecksum = 255 - generatedChecksum;
 
             if(checksum == generatedChecksum){  
-                int NeuroskyMobile_2_poorQuality = 200;
+                //int NeuroskyMobile_2_poorQuality = 200;
                 int NeuroskyMobile_2_attention = 0;
-                int NeuroskyMobile_2_meditation = 0;
+                //int NeuroskyMobile_2_meditation = 0;
 
                 for(int i = 0; i < payloadLength; i++) {
                     //Parse the payload
                     switch (payloadData[i]) {
+                        case 0xD0:{
+                            //uint16_t addUpp = payloadData[i+2];
+                            //uint16_t addLow = payloadData[i+3];
+                            //pc.printf("Connected to: %#04x\r\n", ((addUpp<<8)|addLow));
+                            break;
+                        }
                         case 2:{
                             i++;            
-                            NeuroskyMobile_2_poorQuality = payloadData[i];
+                            //NeuroskyMobile_2_poorQuality = payloadData[i];
                             NeuroskyMobile_2_bigPacket = true;           
                             break;
                         }
@@ -174,7 +245,39 @@ void readNeuroskyMobile_2(){
           
                         case 5:{
                             i++;
-                            NeuroskyMobile_2_meditation = payloadData[i];
+                            //NeuroskyMobile_2_meditation = payloadData[i];
+                            break;
+                        }
+
+                        case 0xD1:{
+                            //pc.printf("Headset not found!\r\n");
+                            
+                            reconnectNeuroskyMobile_2();
+                            break;
+                        }
+                            
+                        case 0xD2:{
+                            //pc.printf("Headset disconnected!\r\n");
+                            
+                            reconnectNeuroskyMobile_2();
+                            break;
+                        }
+                        
+                        case 0xD3:{
+                            //pc.printf("Request denied\r\n");
+                            
+                            reconnectNeuroskyMobile_2();
+                            break;
+                        }
+                            
+                        case 0xD4:{
+                            //pc.printf("Standby/Scan Mode\r\n");
+                            
+                            reconnectNeuroskyMobile_2();
+                            break;
+                        }
+                        
+                        case -70:{
                             break;
                         }
                         
