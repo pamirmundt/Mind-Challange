@@ -13,14 +13,14 @@ uint16_t allignRightOffsetDuration = 3000; //ms
 // Pololu TBB6612fng Motor Controller
 //------------------------------------------------------------------------------
 PwmOut MPWM(PB_13);         //PWM
-DigitalOut MDIRA(PC_6);     //Direction - AIN1
-DigitalOut MDIRB(PC_8);     //Direction - AIN2
+DigitalOut MDIRA(PC_8);     //Direction - AIN1
+DigitalOut MDIRB(PC_6);     //Direction - AIN2
 DigitalOut STBY(PC_5);      //Standby - STBY
 //------------------------------------------------------------------------------
 // Limit Switch Pins
 //------------------------------------------------------------------------------
-DigitalIn  LSL(PC_9);        //Limit Switch Right
-DigitalIn  LSR(PD_2);        //Limit Switch Left
+DigitalIn  LSL(PD_2);        //Limit Switch Right
+DigitalIn  LSR(PC_9);        //Limit Switch Left
 //------------------------------------------------------------------------------
 // Interrupt timer and variables for Moving average
 //  To average floating interrupt pins
@@ -33,10 +33,10 @@ extern int game_Mode;
 extern bool escape;
 
 //Left Filter
-volatile float alphaLeft = 0.75f;     //Forgetting Factor
+volatile float alphaLeft = 0.2f;     //Forgetting Factor
 volatile float filteredLeft = 0.0f;  //Filtered Output
 //Right Filter
-volatile float alphaRight = 0.75f;    //Forgetting Factor
+volatile float alphaRight = 0.2f;    //Forgetting Factor
 volatile float filteredRight = 0.0f; //Filtered Output
 
 volatile bool allignCenterCMD = false;

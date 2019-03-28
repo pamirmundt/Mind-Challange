@@ -7,7 +7,7 @@ float multiSpeed = 0.3f;                //0.0 - 1.0
 float footballSpeed = 0.4f;             //0.0 - 1.0
 
 //Thresholds
-uint8_t singleNormalThreshold = 40;
+uint8_t singleNormalThreshold = 30;
 uint8_t singleHardThreshold = 30;
 
 //Multi mode counters

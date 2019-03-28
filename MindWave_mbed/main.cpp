@@ -1,3 +1,7 @@
+/*
+    Version 1.1.0
+*/
+
 #include "mbed.h"
 #include <string>
 
@@ -26,6 +30,19 @@ extern volatile bool isAllignedLeft;
 extern volatile bool isAllignedRight;
 extern volatile bool isAllignedRightOffset;
 
+// Settings
+extern uint16_t allignCenterDuration;
+extern float allignCenterSpeed;
+extern float allignCornerSpeed;
+extern uint8_t singleNormalThreshold;
+extern float singleNormalSpeed;
+extern uint8_t singleHardThreshold;
+extern float singleHardSpeed;
+extern float singleHardReverseSpeed;
+extern uint16_t allignRightOffsetDuration;
+extern float multiSpeed;
+extern float footballSpeed;
+
 //extern float filteredLeft;
 //extern float filteredRight;
 
@@ -41,6 +58,9 @@ extern bool N2time_live;
 void initMind(void);
 void readPC(void);
 void printDummy(void);
+int readlineTimeout(char buffer[]);
+int readByteTimeout(void);
+void readSettings(char buffer[], int bufferSize);
 
 int game_Mode = 0;
 
@@ -48,13 +68,14 @@ bool escape = false;
 bool gameStarted = false;
 
 int main() {
+    
     sliderInit();
     
     pc.baud(9600);
     NeuroskyMobile_1.setBaud(57600);
     NeuroskyMobile_2.setBaud(57600);
     
-    //dummy.attach(&printDummy, 0.5);
+    //dummy.attach(&printDummy, 1.0);
     
     //initMind();
     
@@ -157,17 +178,6 @@ void readPC(void){
                 game_Mode = noGame;
                 gameStarted = false;
                 break;
-            /* DEBUG
-            case 'A':
-                cartAllignCenter();
-                break;
-            case 'R':
-                cartAllignRight();
-                break;
-            case 'L':
-                cartAllignLeft();
-                break;
-            */
             case 'N':
                 if(isAllignedCenter || isAllignedRight || isAllignedLeft || isAllignedRightOffset){
                     gameStarted = true;
@@ -184,8 +194,107 @@ void readPC(void){
                     N2time_live = false;
                 }
                 break;
+                
+            // Settings
+            case '*':
+                char buffer[10];
+                memset(buffer, 0, sizeof(buffer));
+                int index = readlineTimeout(buffer);
+                
+                readSettings(buffer, sizeof(buffer));
+                
+                break;
         }
     }
+}
+
+void readSettings(char buffer[], int bufferSize){
+
+    string tmp = buffer;
+    
+    // alignmentDuration - AD
+    if(tmp.compare(0,2,"AD") == 0){
+        int value = atoi(buffer + 2);
+        allignCenterDuration = value;
+    }
+    // centerAlignmentSpeed - CEAS
+    else if(tmp.compare(0,4,"CEAS") == 0){
+        int value = atoi(buffer + 4);
+        allignCenterSpeed = float(value)/100.0f;
+    }
+    // cornerAlignmentSpeed - COAS
+    else if(tmp.compare(0,4,"COAS") == 0){
+        int value = atoi(buffer + 4);
+        allignCornerSpeed = float(value)/100.0f;
+    }
+    // singleNormalThreshold - SNT
+    else if(tmp.compare(0,3,"SNT") == 0){
+        int value = atoi(buffer + 3);
+        singleNormalThreshold = value;
+    }
+    // singleNormalSpeed - SNS
+    else if(tmp.compare(0,3,"SNS") == 0){
+        int value = atoi(buffer + 3);
+        singleNormalSpeed = float(value)/100.0f;
+    }
+    //singleAdvancedThreshold - SAT
+    else if(tmp.compare(0,3,"SAT") == 0){
+        int value = atoi(buffer + 3);
+        singleHardThreshold = value;
+    }
+    //singleAdvancedSpeed - SAS
+    else if(tmp.compare(0,3,"SAS") == 0){
+        int value = atoi(buffer + 3);
+        singleHardSpeed = float(value)/100.0f;
+    }
+    //singleAdvancedReverseSpeed - SARS
+    else if(tmp.compare(0,4,"SARS") == 0){
+        int value = atoi(buffer + 4);
+        singleHardReverseSpeed = float(value)/100.0f;
+    }
+    //singleAdvancedAlignDuration - SAAD
+    else if(tmp.compare(0,4,"SAAD") == 0){
+        int value = atoi(buffer + 4);
+        allignRightOffsetDuration = value;
+    }
+    //multiChallengeSpeed - MCS
+    else if(tmp.compare(0,3,"MCS") == 0){
+        int value = atoi(buffer + 3);
+        multiSpeed = float(value)/100.0f;
+    }
+    //multiFootballSpeed - MFS
+    else if(tmp.compare(0,3,"MFS") == 0){
+        int value = atoi(buffer + 3);
+        footballSpeed = float(value)/100.0f;
+    }
+}
+
+int readlineTimeout(char buffer[]){
+    
+    int index = 0;
+    
+    while(true){
+        int c = readByteTimeout();
+        
+        if ( (c != '\n') && (c != '\r') && (c != -1) ){
+            buffer[index] = c;
+            index++;
+        }
+
+        if( (c == '\n') || (c == '\r') || (c == -1) )
+            return index;
+    }
+}
+
+int readByteTimeout(void){
+    Timer timeOut;
+    timeOut.start();
+    while(!pc.readable()){
+         if(timeOut.read_ms() > 5)
+            return -1;
+    }
+    
+    return pc.getc();
 }
 
 void printDummy(void){
