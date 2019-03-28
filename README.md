@@ -1,1 +1,1 @@
-# Mind Challange
+# Mind Challenge
